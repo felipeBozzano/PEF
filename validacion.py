@@ -16,11 +16,14 @@ def validate_reports(directories_to_validate):
         files = os.listdir(directory)
         print(f"THE FILES ARE {files}")
         chunks = []
+        
         for file in files:
             chunks.append(file) if file.startswith("chunk") else None
+        
         for chunk in chunks:
             print(f"READING THE CHUNK {directory}/{chunk}")
             print(f"WRITING THE CHUNK {directory}/transformed_{chunk}")
+            
             with open(f"{directory}/{chunk}", "r", newline="") as raw_csv, \
                     open(f"{directory}/transformed_{chunk}", "w", newline="") as transformed_csv:
                 new_header = list()
@@ -28,13 +31,14 @@ def validate_reports(directories_to_validate):
                 w = csv.writer(transformed_csv)
                 header = r.__next__()
                 for head in header:
-                    new_header.append(head.replace('"', "").replace(" ", "_").replace("/", "_"))
+                    new_header.append(head.replace('"', '').replace(" ", "_").replace("/", "_"))
                 w.writerow(new_header)
                 for row in r:
                     w.writerow(row)
                     
             print(f"READING THE CHUNK {directory}/transformed_{chunk}")
             print(f"WRITING THE CHUNK {directory}/validated_{chunk}")
+            
             with open(f"{directory}/transformed_{chunk}", "r", newline="") as transformed_csv, \
                     open(f"{directory}/validated_{chunk}", "w", newline="") as validated_csv:
                 csv_reader = csv.DictReader(transformed_csv)
@@ -62,6 +66,7 @@ def split_data():
         print("THE RAW FILE " + str({raw_file}) + " HAS " + str(num_raw_lines) + " LINES")
         print("CHUNKS PATH: " + str(chunks_path))
         os.makedirs(chunks_path, exist_ok=True)
+        
         with open(raw_file_path, "r") as raw_csv, \
                 open(str(chunks_path)+"/header.csv", "w") as headers:
             r = csv.reader(raw_csv)
@@ -69,6 +74,7 @@ def split_data():
             header.append("SourceFile")
             w = csv.writer(headers)
             w.writerow(header)
+        
         subprocess.getoutput(
             "tail -n +2 " + str(raw_file_path) + " >> " + str(chunks_path) + "/no_header.csv"
         )
@@ -83,6 +89,7 @@ def split_data():
             print("THE RAW FILE " + str(raw_file) + " DOES NOT HAVE ANY CHUNK")
             continue
         print("THE RAW FILE " + str(raw_file) + " HAS " + str(num_of_chunks) + " CHUNKS")
+        
         for chunk in range(num_of_chunks):
             chunk = "{:05d}".format(chunk)
             chunk_tmp_file = str(chunks_path) + "/chunk_tmp_" + str(chunk)
@@ -90,6 +97,7 @@ def split_data():
                 "cat " + str(chunks_path) + "/header.csv " + str(chunk_tmp_file) + " >> " + str(chunks_path) + "/chunk_" + str(chunk) + ".csv"
             )
             subprocess.getoutput("rm -rf " + str(chunk_tmp_file))
+        
         chunks_list.append(
             {
                 "path": chunks_path,
